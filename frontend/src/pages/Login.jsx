@@ -1,0 +1,1 @@
+export default function Login() { return <main className="page-shell"><section className="panel auth-panel"><p className="eyebrow">IAMSHIELD AI</p><h1>Prototype access</h1><p>This academic prototype uses seeded demo telemetry. Authentication is reserved for the next iteration.</p></section></main> }

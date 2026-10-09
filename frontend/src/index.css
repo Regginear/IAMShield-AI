@@ -1,0 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html { font-family: Georgia, 'Times New Roman', serif; }
+button, input, textarea, select { font-family: inherit; }

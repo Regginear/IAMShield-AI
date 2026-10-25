@@ -1,0 +1,64 @@
+version: '3.9'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: iamshield-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: iamshield
+      MYSQL_USER: iamshield_user
+      MYSQL_PASSWORD: iamshield_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/schemas:/docker-entrypoint-initdb.d
+    networks:
+      - iamshield-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: iamshield-backend
+    environment:
+      DATABASE_URL: "mysql+pymysql://iamshield_user:iamshield_pass@mysql:3306/iamshield"
+      SECRET_KEY: "your-secret-key-change-this-in-production"
+      DEBUG: "False"
+      ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:5173"
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    networks:
+      - iamshield-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: iamshield-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - iamshield-network
+    command: npm run dev
+
+volumes:
+  mysql_data:
+
+networks:
+  iamshield-network:
+    driver: bridge

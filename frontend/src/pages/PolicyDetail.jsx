@@ -1,0 +1,1 @@
+export default function PolicyDetail() { return <main className="page-shell"><section className="panel"><p className="eyebrow">POLICY DETAIL</p><h1>Review workflow</h1><p>Select a generated policy from the Policies view to inspect its permissions and validation findings.</p></section></main> }

@@ -1,0 +1,1 @@
+export default function Register() { return <main className="page-shell"><section className="panel auth-panel"><p className="eyebrow">IAMSHIELD AI</p><h1>Research prototype</h1><p>Account management is outside the reduced MVP scope. Continue to the dashboard to review the synthesis workflow.</p></section></main> }

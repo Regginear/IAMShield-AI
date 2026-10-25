@@ -60,20 +60,41 @@ def validate_policy(policy_document: dict) -> dict:
     if policy_document.get("Version") != "2012-10-17":
         warnings.append("Policy version is missing or is not the AWS-compatible 2012-10-17 version.")
     statements = policy_document.get("Statement")
+    if isinstance(statements, dict):
+        statements = [statements]
     if not isinstance(statements, list) or not statements:
-        errors.append("Policy must contain a non-empty Statement list.")
+        errors.append("Policy must contain a non-empty Statement object or list.")
     else:
         for index, statement in enumerate(statements, start=1):
+            if not isinstance(statement, dict):
+                errors.append(f"Statement {index} must be an object.")
+                continue
             if statement.get("Effect") not in {"Allow", "Deny"}:
                 errors.append(f"Statement {index} must define Effect as Allow or Deny.")
-            if statement.get("Action") == "*" or "*" in statement.get("Action", []):
-                warnings.append(f"Statement {index} grants wildcard actions.")
-            if statement.get("Resource") == "*":
-                warnings.append(f"Statement {index} grants access to every resource.")
-        if warnings:
-            recommendations.append("Replace wildcard permissions with explicit actions and resource ARNs.")
-        else:
-            recommendations.append("Policy uses explicit actions and resource scopes.")
+
+            for field in ("Action", "Resource"):
+                value = statement.get(field)
+                values = [value] if isinstance(value, str) else value
+                if (
+                    not isinstance(values, list)
+                    or not values
+                    or any(not isinstance(item, str) or not item.strip() for item in values)
+                ):
+                    errors.append(
+                        f"Statement {index} must define {field} as a non-empty string or list of strings."
+                    )
+                    continue
+                if field == "Action" and any("*" in item for item in values):
+                    warnings.append(f"Statement {index} grants wildcard actions.")
+                if field == "Resource" and "*" in values:
+                    warnings.append(f"Statement {index} grants access to every resource.")
+
+    if any("wildcard" in warning or "every resource" in warning for warning in warnings):
+        recommendations.append("Replace wildcard permissions with explicit actions and resource ARNs.")
+    elif errors:
+        recommendations.append("Correct the policy errors before reviewing or deploying it.")
+    else:
+        recommendations.append("Policy uses explicit actions and resource scopes.")
     return {
         "is_valid": not errors,
         "warnings": warnings,

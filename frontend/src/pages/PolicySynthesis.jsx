@@ -1,32 +1,168 @@
 import { useState } from 'react'
-
-const API = 'http://localhost:8000'
+import { Link } from 'react-router-dom'
+import Icon from '../components/Icon'
+import { apiRequest } from '../lib/api'
 
 export default function PolicySynthesis() {
   const [result, setResult] = useState(null)
   const [validation, setValidation] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [timeframeDays, setTimeframeDays] = useState(30)
+  const [resourceType, setResourceType] = useState('')
+  const [savedPolicyId, setSavedPolicyId] = useState(null)
 
   async function runSynthesis() {
     setLoading(true)
     setError('')
+    setNotice('')
+    setResult(null)
+    setValidation(null)
+    setSavedPolicyId(null)
     try {
-      const response = await fetch(`${API}/api/synthesis/analyze`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ timeframe_days: 30 }) })
-      if (!response.ok) throw new Error('Synthesis request failed')
-      const data = await response.json()
+      const data = await apiRequest('/api/synthesis/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          timeframe_days: Number(timeframeDays),
+          ...(resourceType.trim() ? { resource_type: resourceType.trim() } : {}),
+        }),
+      })
       setResult(data)
-      const validationResponse = await fetch(`${API}/api/synthesis/validate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ policy_document: data.policy_document, policy_type: 'aws-iam' }) })
-      setValidation(await validationResponse.json())
-    } catch (requestError) { setError(requestError.message) } finally { setLoading(false) }
+      const validationResult = await apiRequest('/api/synthesis/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ policy_document: data.policy_document, policy_type: 'aws-iam' }),
+      })
+      setValidation(validationResult)
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  return <main className="page-shell">
-    <section className="page-heading"><div><p className="eyebrow">SYNTHESIS ENGINE / EXPLAINABLE OUTPUT</p><h1>Generate a least-privilege policy</h1><p>IAMShield AI converts observed access patterns into a narrow, reviewable policy document.</p></div><button className="primary-button" onClick={runSynthesis} disabled={loading}>{loading ? 'Analyzing...' : 'Analyze 30 days'}</button></section>
-    {error && <div className="notice error">{error}. Confirm the backend is running on port 8000.</div>}
-    {result && <section className="content-grid synthesis-grid">
-      <div className="panel"><div className="panel-heading"><div><p className="eyebrow">GENERATED POLICY</p><h2>{result.policy_name}</h2></div><span className="confidence">{Math.round(result.confidence_score * 100)}% confidence</span></div><pre className="policy-code">{JSON.stringify(result.policy_document, null, 2)}</pre><div className="recommendations"><h3>Recommendations</h3>{result.recommendations.map((item) => <p key={item}>◆ {item}</p>)}</div></div>
-      <div className="panel"><p className="eyebrow">VALIDATION GATE</p><h2>{validation?.is_valid ? 'Ready for review' : 'Needs attention'}</h2><div className={validation?.is_valid ? 'validation-ok' : 'validation-warning'}>{validation?.is_valid ? 'Policy structure is valid.' : validation?.errors?.join(' ')}</div><h3>Observed permissions</h3><div className="permission-list">{result.permissions.map((item) => <div className="permission" key={`${item.resource}-${item.action}`}><span>{item.action}</span><small>{item.resource} · {item.frequency} events</small></div>)}</div></div>
-    </section>}
-  </main>
+  async function copyPolicy() {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(result.policy_document, null, 2))
+      setNotice('Policy JSON copied to clipboard.')
+      setError('')
+    } catch (copyError) {
+      setError(`Could not copy policy JSON: ${copyError.message}`)
+      setNotice('')
+    }
+  }
+
+  async function savePolicy() {
+    setSaving(true)
+    setError('')
+    setNotice('')
+    try {
+      const saved = await apiRequest('/api/policies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: result.policy_name,
+          description: `Synthesized from ${timeframeDays} days of observed access patterns.`,
+          policy_type: 'role',
+          resource_type: 'AWS IAM',
+          policy_document: result.policy_document,
+        }),
+      })
+      setSavedPolicyId(saved.id)
+      setNotice('Draft saved to your policy inventory for review.')
+    } catch (requestError) {
+      setError(requestError.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const validationStatus = !validation
+    ? 'Validation unavailable'
+    : !validation.is_valid
+      ? 'Needs attention'
+      : validation.warnings.length
+        ? 'Review recommended'
+        : 'Ready for review'
+  const validationClass = validation?.is_valid && !validation.warnings.length ? 'validation-ok' : 'validation-warning'
+
+  return (
+    <main className="page-shell">
+      <section className="page-heading">
+        <div><p className="eyebrow">IDENTITY GOVERNANCE / POLICY WORKBENCH</p><h1>Least-privilege synthesis</h1><p>Turn observed access activity into an explainable policy draft. Always review generated permissions before deployment.</p></div>
+        <div className="synthesis-controls">
+          <label htmlFor="analysis-window">Analysis window</label>
+          <select id="analysis-window" value={timeframeDays} onChange={(event) => setTimeframeDays(event.target.value)}>
+            {[7, 30, 90, 180, 365].map((days) => <option key={days} value={days}>{days} days</option>)}
+          </select>
+          <button className="primary-button" onClick={runSynthesis} disabled={loading}><Icon name="spark" size={14} />{loading ? 'Analyzing…' : 'Run analysis'}</button>
+        </div>
+      </section>
+
+      <section className="panel synthesis-input-panel">
+        <div className="panel-heading"><div><p className="panel-kicker">ANALYSIS INPUTS</p><h2>Choose the observation scope</h2><span className="panel-subtitle">This API analyzes recorded access patterns; it does not accept desired permissions or identify a specific role.</span></div><span className="neutral-tag"><Icon name="lock" size={12} />Read-only analysis</span></div>
+        <div className="synthesis-inputs">
+          <label className="input-group"><span>Cloud policy format</span><input value="AWS IAM · generated by current backend" readOnly aria-describedby="provider-note" /><small id="provider-note">Provider is fixed by the current policy synthesis service.</small></label>
+          <label className="input-group"><span>Resource context <em>Optional</em></span><input value={resourceType} onChange={(event) => setResourceType(event.target.value)} placeholder="For example: s3 or ec2" /><small>Filters observed resource names via the existing API.</small></label>
+          <div className="input-group unsupported-input"><span>Identity / role context</span><div><Icon name="user" size={15} />Identity-specific synthesis is not available in this API.</div><small>No role selector is shown to avoid implying an identity-specific result.</small></div>
+        </div>
+      </section>
+
+      {error && <div className="notice error" role="alert"><Icon name="alert" size={15} />{error}</div>}
+      {notice && <div className="notice success" role="status"><Icon name="check" size={15} />{notice}{savedPolicyId && <Link className="table-action" to={`/policies/${savedPolicyId}`}>Review draft <Icon name="chevron" size={12} /></Link>}</div>}
+
+      {!result && !loading && (
+        <section className="panel synthesis-empty">
+          <span className="empty-icon"><Icon name="spark" size={21} /></span>
+          <p className="panel-kicker">READY WHEN YOU ARE</p><h2>Analyze observed access</h2>
+          <p>Choose an observation window and optional resource context. The backend generates a draft only from recorded access; it does not infer unobserved business requirements.</p>
+          <button className="primary-button" onClick={runSynthesis}><Icon name="spark" size={14} />Analyze {timeframeDays} days</button>
+        </section>
+      )}
+
+      {loading && <section className="panel analysis-loading" role="status"><span className="loading-spinner" /><strong>Analyzing access patterns</strong><span>Grouping observed permissions and validating the generated policy…</span></section>}
+
+      {result && (
+        <>
+          <section className="metrics-grid synthesis-metrics">
+            <article className="metric"><div className="metric-top"><span className="metric-label">Permissions in draft</span><span className="metric-icon"><Icon name="lock" size={15} /></span></div><strong>{result.permissions.length}</strong><div className="metric-foot">Distinct observed grants</div></article>
+            <article className="metric"><div className="metric-top"><span className="metric-label">Activity window</span><span className="metric-icon"><Icon name="clock" size={15} /></span></div><strong>{timeframeDays} days</strong><div className="metric-foot">Selected lookback period</div></article>
+            <article className="metric"><div className="metric-top"><span className="metric-label">Confidence estimate</span><span className="metric-icon"><Icon name="activity" size={15} /></span></div><strong>{Math.round(result.confidence_score * 100)}%</strong><div className="metric-foot">Backend heuristic, not a guarantee</div></article>
+            <article className={`metric ${validation?.warnings?.length || !validation?.is_valid ? 'warning' : 'success'}`}><div className="metric-top"><span className="metric-label">Validation findings</span><span className="metric-icon"><Icon name={validation?.warnings?.length || !validation?.is_valid ? 'alert' : 'check'} size={15} /></span></div><strong>{(validation?.warnings?.length || 0) + (validation?.errors?.length || 0)}</strong><div className="metric-foot">{validationStatus}</div></article>
+          </section>
+
+          <section className="synthesis-grid">
+            <article className="panel">
+              <div className="panel-heading">
+                <div><p className="panel-kicker">GENERATED POLICY</p><h2>{result.policy_name}</h2><span className="panel-subtitle">AWS IAM format · {timeframeDays}-day observation window{resourceType.trim() ? ` · ${resourceType.trim()} context` : ''}</span></div>
+                <div className="heading-actions"><button className="secondary-button" onClick={copyPolicy}><Icon name="copy" size={13} />Copy JSON</button><button className="primary-button" onClick={savePolicy} disabled={saving || Boolean(savedPolicyId)}><Icon name="file" size={13} />{saving ? 'Saving…' : savedPolicyId ? 'Draft saved' : 'Save draft'}</button></div>
+              </div>
+              <pre className="policy-code"><code>{JSON.stringify(result.policy_document, null, 2)}</code></pre>
+              <div className="recommendations"><h3>Analysis recommendations</h3>{result.recommendations.map((item) => <p key={item}><Icon name="chevron" size={12} />{item}</p>)}</div>
+            </article>
+
+            <aside className="panel">
+              <div className="panel-heading"><div><p className="panel-kicker">QUALITY GATE</p><h2>{validationStatus}</h2><span className="panel-subtitle">Structural checks only; not a cloud-provider simulator</span></div><Icon name={validation?.is_valid && !validation.warnings.length ? 'shield' : 'alert'} size={17} /></div>
+              <div className={validationClass}>
+                {!validation && 'Validation could not be completed.'}
+                {validation?.errors.map((item) => <p key={item}>{item}</p>)}
+                {validation?.warnings.map((item) => <p key={item}>{item}</p>)}
+                {validation?.is_valid && !validation.warnings.length && 'No structural errors or wildcard warnings were found.'}
+                {validation?.recommendations.map((item) => <p key={item}>{item}</p>)}
+              </div>
+              <h3>Observed permissions</h3>
+              <div className="permission-list">
+                {result.permissions.length
+                  ? result.permissions.map((item) => <div className="permission" key={`${item.resource}-${item.action}`}><span>{item.action}</span><small>{item.resource} · {item.frequency} observed events · observed {new Date(item.first_seen).toLocaleDateString()}–{new Date(item.last_seen).toLocaleDateString()}</small></div>)
+                  : <div className="table-empty">No recent permissions matched this analysis window.</div>}
+              </div>
+            </aside>
+          </section>
+        </>
+      )}
+    </main>
+  )
 }

@@ -326,14 +326,15 @@ Authorization: Bearer <your_jwt_token>
   {
     "is_valid": true,
     "warnings": [
-      "Policy allows wildcard actions"
+      "Statement 1 grants wildcard actions."
     ],
     "errors": [],
     "recommendations": [
-      "Restrict actions to specific operations"
+      "Replace wildcard permissions with explicit actions and resource ARNs."
     ]
   }
   ```
+- `Statement` may be a single object or a non-empty list of objects. Each statement is checked for `Effect`, `Action`, and `Resource`; wildcard actions and unrestricted `Resource: "*"` produce warnings. This is a structural check, not an AWS policy simulator.
 
 ### Audit Log Endpoints
 

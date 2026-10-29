@@ -7,6 +7,12 @@ from typing import Iterable
 from app.models import AccessPattern
 
 
+def contains_wildcard(value) -> bool:
+    if isinstance(value, str):
+        return "*" in value
+    return any(isinstance(item, str) and "*" in item for item in (value or []))
+
+
 def analyze_patterns(patterns: Iterable[AccessPattern], timeframe_days: int = 30) -> dict:
     """Build a minimal AWS-style policy from observed allowed access patterns."""
     cutoff = datetime.utcnow() - timedelta(days=timeframe_days)
@@ -26,7 +32,7 @@ def analyze_patterns(patterns: Iterable[AccessPattern], timeframe_days: int = 30
             "last_seen": pattern.last_accessed,
             "required": pattern.access_count > 0,
         })
-        if pattern.action == "*" or pattern.resource == "*":
+        if contains_wildcard(pattern.action) or pattern.resource == "*":
             recommendations.append(
                 f"Replace wildcard access for {pattern.resource} with a specific resource and action."
             )
@@ -66,7 +72,7 @@ def validate_policy(policy_document: dict) -> dict:
         for index, statement in enumerate(statements, start=1):
             if statement.get("Effect") not in {"Allow", "Deny"}:
                 errors.append(f"Statement {index} must define Effect as Allow or Deny.")
-            if statement.get("Action") == "*" or "*" in statement.get("Action", []):
+            if contains_wildcard(statement.get("Action")):
                 warnings.append(f"Statement {index} grants wildcard actions.")
             if statement.get("Resource") == "*":
                 warnings.append(f"Statement {index} grants access to every resource.")

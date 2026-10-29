@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field, validator
-from typing import Optional, List
+from typing import Optional, List, Literal
 from datetime import datetime
 
 
@@ -94,6 +94,11 @@ class PolicyUpdate(BaseModel):
     status: Optional[str] = None
 
 
+class PolicyStatusUpdate(BaseModel):
+    status: Literal["draft", "approved", "rejected"]
+    reason: Optional[str] = Field(default=None, max_length=500)
+
+
 class Policy(PolicyBase):
     id: int
     policy_document: dict
@@ -116,6 +121,12 @@ class AccessPatternBase(BaseModel):
 class AccessPatternCreate(AccessPatternBase):
     user_id: Optional[int] = None
     source_ip: Optional[str] = None
+    access_count: int = Field(default=1, ge=1)
+    status: Literal["allowed", "denied"] = "allowed"
+
+
+class AccessPatternBatchCreate(BaseModel):
+    events: List[AccessPatternCreate] = Field(..., min_length=1, max_length=500)
 
 
 class AccessPattern(AccessPatternBase):

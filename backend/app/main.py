@@ -10,8 +10,10 @@ from app.core.database import engine, Base, get_db
 from app.models import AccessPattern, Policy
 from app.schemas import (
     AccessPatternCreate,
+    AccessPatternBatchCreate,
     PolicyAnalysisRequest,
     PolicyCreate,
+    PolicyStatusUpdate,
     PolicyValidationRequest,
 )
 from app.services.synthesis import analyze_patterns, validate_policy
@@ -110,6 +112,14 @@ def add_access_pattern(payload: AccessPatternCreate, db: Session = Depends(get_d
     return pattern
 
 
+@app.post("/api/access-patterns/bulk")
+def add_access_patterns(payload: AccessPatternBatchCreate, db: Session = Depends(get_db)):
+    patterns = [AccessPattern(**event.model_dump()) for event in payload.events]
+    db.add_all(patterns)
+    db.commit()
+    return {"imported": len(patterns)}
+
+
 @app.post("/api/synthesis/analyze")
 def synthesize_policy(payload: PolicyAnalysisRequest, db: Session = Depends(get_db)):
     patterns = db.query(AccessPattern).all()
@@ -141,6 +151,33 @@ def list_policies(db: Session = Depends(get_db)):
     return [{"id": item.id, "name": item.name, "status": item.status,
              "policy_type": item.policy_type, "resource_type": item.resource_type,
              "policy_document": json.loads(item.policy_document)} for item in policies]
+
+
+@app.get("/api/policies/{policy_id}")
+def get_policy(policy_id: int, db: Session = Depends(get_db)):
+    policy = db.query(Policy).filter(Policy.id == policy_id).first()
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+    return {"id": policy.id, "name": policy.name, "description": policy.description,
+            "status": policy.status, "policy_type": policy.policy_type,
+            "resource_type": policy.resource_type,
+            "policy_document": json.loads(policy.policy_document),
+            "created_at": policy.created_at, "updated_at": policy.updated_at,
+            "activated_at": policy.activated_at}
+
+
+@app.patch("/api/policies/{policy_id}/status")
+def update_policy_status(policy_id: int, payload: PolicyStatusUpdate, db: Session = Depends(get_db)):
+    policy = db.query(Policy).filter(Policy.id == policy_id).first()
+    if not policy:
+        raise HTTPException(status_code=404, detail="Policy not found")
+    policy.status = payload.status
+    if payload.status == "approved":
+        policy.activated_at = datetime.utcnow()
+    db.commit()
+    db.refresh(policy)
+    return {"id": policy.id, "status": policy.status, "activated_at": policy.activated_at,
+            "reason": payload.reason}
 
 
 # Error handlers

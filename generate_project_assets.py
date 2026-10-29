@@ -274,15 +274,15 @@ def generate_presentation():
     slides = [
         {
             'title': 'IAMShield AI',
-            'subtitle': 'Autonomous Least-Privilege IAM Policy Synthesizer',
+            'subtitle': 'Assisted Least-Privilege IAM Policy Synthesis',
             'bullets': [
                 'Team: Vasu Agrawal, Akash Gaurav, Sarthak',
-                'Date: September 2, 2026',
+                'Date: October 23, 2026',
                 'Mentor: Sir Preshit Desai',
                 'University: GLA University'
             ],
             'stats': [],
-            'note': 'Introduce the project as a security-focused AI system that automates IAM policy generation using least-privilege principles. Emphasize the university project context and mentor approval objective.'
+            'note': 'Good morning/afternoon. This presentation introduces IAMShield AI, an approval-controlled prototype for assisted least-privilege IAM policy synthesis. State the team, mentor, and the central idea: access evidence is converted into an explainable policy draft, but the administrator remains responsible for approval.'
         },
         {
             'title': 'The IAM Policy Challenge',
@@ -336,13 +336,13 @@ def generate_presentation():
             'title': 'Core Technologies & Algorithms',
             'subtitle': 'Smart Engine with Proven Stack',
             'bullets': [
-                'Backend: FastAPI + Python for high-performance API and policy logic processing.',
-                'Frontend: React + Tailwind CSS + Vite for a fast and clean management interface.',
-                'Database: MySQL or PostgreSQL with SQLAlchemy ORM for safer data handling and query integrity.',
-                'Core algorithm: Extract access patterns, resolve conflicts, apply least-privilege rules, and validate output.'
+                'Backend: Python + FastAPI exposes dashboard, access-pattern, synthesis, validation, and policy endpoints.',
+                'Frontend: React + Vite presents telemetry, risk signals, JSON output, and policy review screens.',
+                'Persistence: SQLAlchemy with SQLite for the demonstration; PostgreSQL/MySQL remain migration options.',
+                'Algorithm: filter recent allowed events, group action-resource pairs, generate statements, then validate.'
             ],
-            'stats': [('O(n log n)', 'efficient pattern analysis'), ('<200ms', 'API response target'), ('90%+', 'target code coverage')],
-            'note': 'Highlight why the selected technology stack is appropriate for building a secure, scalable, and explainable IAM optimization solution.'
+            'stats': [('Rule-based', 'explainable decisions'), ('JSON', 'reviewable output'), ('SQLite', 'local demo storage')],
+            'note': 'Explain the technology choices in practical terms. FastAPI supports a small typed API, React makes the workflow visible, SQLAlchemy keeps persistence replaceable, and the rule-based engine is easier to explain than an unverified black-box model.'
         },
         {
             'title': 'Market & Competition Analysis',
@@ -360,49 +360,49 @@ def generate_presentation():
             'title': 'Ground-Level Research Validation',
             'subtitle': 'Problem, Compliance, and Feasibility Confirmed',
             'bullets': [
-                'Verizon DBIR and Deloitte research confirm that misconfigurations and weak privilege management are major causes of breaches.',
-                'NIST CSF, PCI-DSS, HIPAA, and GDPR all reinforce least-privilege access and auditability requirements.',
-                'Prototype logic validates policy generation across common cloud use cases with high accuracy.',
-                'Selected stack and architecture are proven in industry and suitable for enterprise deployment.'
+                'NIST and cloud IAM guidance support least privilege, explicit access, and reviewable controls.',
+                'The research identifies manual interpretation, privilege creep, and broad permissions as the focused problem.',
+                'The prototype was tested with seeded normal, wildcard, and recent access patterns.',
+                'The result is presented as an evaluation target and academic prototype, not a production security guarantee.'
             ],
-            'stats': [('80%', 'breaches due to misconfigurations'), ('92%', 'companies run multi-cloud setups'), ('98%+', 'validation accuracy target')],
-            'note': 'Stress that the concept is not theoretical; the problem, regulations, and solution feasibility are all grounded in real industry evidence.'
+            'stats': [('4', 'seeded access patterns'), ('4', 'generated statements'), ('1', 'wildcard warning')],
+            'note': 'Describe the evidence honestly. Ground-level validation currently means representative sample data, successful backend compilation, frontend build validation, policy generation, and wildcard-risk detection. Future evaluation will use larger authorized datasets.'
         },
         {
             'title': 'Technical Architecture Overview',
             'subtitle': 'Robust, Modular, and Secure by Design',
             'bullets': [
-                'Frontend: interactive dashboard for policy reviews, role management, and recommendations.',
-                'Backend: REST API with authentication, validation, and synthesis services.',
-                'Database: secure persistence for users, roles, policy versions, and audit history.',
-                'Security layers: JWT auth, RBAC, input validation, ORM protection, audit logging, and deployment hardening.'
+                'Presentation layer: React dashboard shows access patterns, counts, risk signals, and policy output.',
+                'Application layer: FastAPI coordinates filtering, synthesis, validation, and policy storage.',
+                'Data layer: SQLAlchemy models access patterns and policy drafts in a local SQLite demonstration store.',
+                'Control boundary: no automatic production enforcement; every recommendation is intended for human review.'
             ],
-            'stats': [('API Time', '<200ms p95'), ('DB Query', '<100ms avg'), ('Users', '1000+ concurrent target')],
-            'note': 'Explain how a modular architecture makes the project both secure and scalable while keeping the system easy to extend.'
+            'stats': [('3', 'architecture layers'), ('5', 'main API workflows'), ('0', 'production changes')],
+            'note': 'Walk through the architecture from left to right: the dashboard calls the FastAPI routes, the routes use the synthesis service and SQLAlchemy session, and the database stores the evidence and drafts. Emphasize that the prototype deliberately stops before production enforcement.'
         },
         {
             'title': 'Implementation Timeline & Milestones',
             'subtitle': 'Clear Roadmap to an MVP',
             'bullets': [
-                'Weeks 1-2: database design, auth, and core API foundation.',
-                'Weeks 3-4: policy synthesis engine, validation logic, and audit logging.',
-                'Weeks 5-6: dashboard UI, user workflows, and policy management features.',
-                'Weeks 7-8: testing, performance tuning, security hardening, and release readiness.'
+                'Completed foundation: project structure, SQLAlchemy models, SQLite fallback, and FastAPI application.',
+                'Completed core workflow: demo data, access-pattern analysis, JSON synthesis, and validation warnings.',
+                'Completed interface: dashboard, synthesis view, policy list, and responsive styling.',
+                'Next hardening step: authentication, approval comments, version history, and larger test fixtures.'
             ],
-            'stats': [('MVP', 'Week 8'), ('Deploy', 'Week 10'), ('Beta', '100 customers by Week 12')],
-            'note': 'This slide makes the plan realistic: the project is scoped in phases and aligned with a deliverable-driven timeline.'
+            'stats': [('Now', 'working MVP'), ('Next', 'approval workflow'), ('Later', 'cloud adapters')],
+            'note': 'Present this as progress and next steps rather than a commercial delivery promise. The core analysis-to-policy demonstration is working; authentication, approval history, and live cloud adapters are the next controlled increments.'
         },
         {
             'title': 'Success Metrics & Validation',
             'subtitle': 'Measurable Criteria for Quality',
             'bullets': [
-                'Code coverage target of 90%+ with unit and integration tests for the synthesis engine.',
-                'API response time under 200ms and policy synthesis under 5 seconds for a typical user action.',
-                'Policy accuracy target of 95%+ with validation against real access use cases.',
-                'Business goals: user satisfaction above 4.5/5, 100+ target customers, and strong security compliance.'
+                'Build quality: backend compilation and frontend production build complete successfully.',
+                'Functional quality: normal, wildcard, empty, denied, and stale-event scenarios are defined for testing.',
+                'Policy quality: generated permissions must trace back to eligible observed action-resource pairs.',
+                'Safety quality: warnings are shown before approval, and production enforcement is intentionally absent.'
             ],
-            'stats': [('Coverage', '90%+'), ('Policy Accuracy', '95%+'), ('API Uptime', '99.9% target')],
-            'note': 'Present the evaluation framework as a balanced mix of technical quality, security assurance, and business viability.'
+            'stats': [('Build', 'passed'), ('Smoke test', '4 patterns'), ('Warning', 'wildcard detected')],
+            'note': 'These are the metrics that can be defended in the current presentation. Avoid claiming 95% production accuracy or commercial KPIs before a larger controlled evaluation is completed.'
         },
         {
             'title': 'Conclusion & Call to Action',
@@ -474,7 +474,8 @@ def generate_presentation():
                     run.font.color.rgb = blue
         else:
             build_slide_title(slide, slide_data['title'], blue)
-            add_bullets(slide, slide_data['bullets'], left=Inches(0.8), top=Inches(1.4), width=Inches(7.8), height=Inches(4.7), font_size=18)
+            bullet_size = 16 if index in {6, 7, 8, 9, 10, 11} else 18
+            add_bullets(slide, slide_data['bullets'], left=Inches(0.8), top=Inches(1.4), width=Inches(7.8), height=Inches(4.7), font_size=bullet_size)
             if slide_data['stats']:
                 # stat cards on right
                 x = Inches(8.9)

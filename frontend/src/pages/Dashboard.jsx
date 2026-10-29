@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-const API = 'http://localhost:8000'
+const API = ''
 
 function Metric({ label, value, tone = '' }) {
   return <div className={`metric ${tone}`}><span>{label}</span><strong>{value}</strong></div>

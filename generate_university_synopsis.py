@@ -8,7 +8,7 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 
 ROOT = Path(r"D:\Reggii\GLA\Mini Project")
-OUTPUT = ROOT / "PROJECT_SYNOPSIS.docx"
+OUTPUT = ROOT / "PROJECT_SYNOPSIS_FINAL.docx"
 
 BLUE = "24557A"
 LIGHT_BLUE = "EAF2F8"
@@ -86,7 +86,7 @@ def add_heading(doc, text, level=1):
     run.bold = True
     run.font.name = "Times New Roman"
     run.font.size = Pt(17 if level == 1 else 13)
-    run.font.color.rgb = RGBColor.from_string(BLUE if level == 1 else DARK)
+    run.font.color.rgb = RGBColor.from_string(DARK)
     if level == 1:
         paragraph.page_break_before = True
     return paragraph
@@ -160,19 +160,6 @@ def setup_document(doc):
     normal.font.size = Pt(11)
     normal.font.color.rgb = RGBColor.from_string(DARK)
     normal.paragraph_format.line_spacing = 1.15
-    header = section.header.paragraphs[0]
-    header.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    header_run = header.add_run("IAMShield AI - Project Synopsis")
-    header_run.italic = True
-    header_run.font.name = "Times New Roman"
-    header_run.font.size = Pt(9)
-    header_run.font.color.rgb = RGBColor.from_string(GRAY)
-    footer = section.footer.paragraphs[0]
-    footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    footer_run = footer.add_run("GLA University | Page ")
-    footer_run.font.name = "Times New Roman"
-    footer_run.font.size = Pt(9)
-    add_page_number(footer)
 
 
 def build_document():
@@ -180,10 +167,10 @@ def build_document():
     setup_document(doc)
 
     # Cover page
-    add_center(doc, "IAMSHIELD AI", 27, True, BLUE, 2)
+    add_center(doc, "IAMSHIELD AI", 27, True, DARK, 2)
     add_center(doc, "Assisted Least-Privilege IAM Policy Synthesis", 17, True, DARK, 20)
     add_center(doc, "A Project Synopsis submitted in partial fulfilment of the requirements for the award of the degree of", 12, False, DARK, 12)
-    add_center(doc, "BACHELOR OF TECHNOLOGY", 18, True, BLUE, 2)
+    add_center(doc, "BACHELOR OF TECHNOLOGY", 18, True, DARK, 2)
     add_center(doc, "in", 12, False, DARK, 2)
     add_center(doc, "Computer Science and Engineering", 15, True, DARK, 2)
     add_center(doc, "Specialization in Artificial Intelligence and Machine Learning", 12, True, DARK, 22)
@@ -197,7 +184,7 @@ def build_document():
     add_center(doc, "Technical Trainer", 11, False, GRAY, 22)
     add_center(doc, "Department of Computer Engineering and Applications", 12, True, DARK, 3)
     add_center(doc, "Institute of Engineering and Technology", 12, True, DARK, 10)
-    add_center(doc, "GLA University, Mathura - 281406, India", 13, True, BLUE, 4)
+    add_center(doc, "GLA University, Mathura - 281406, India", 13, True, DARK, 4)
     add_center(doc, "October 2026", 12, False, DARK, 0)
 
     # Declaration
@@ -266,6 +253,19 @@ def build_document():
     add_table(doc, ["In Scope", "Deferred or Out of Scope"], [["Sample log ingestion", "Production cloud credentials"], ["Pattern analysis", "Automatic policy enforcement"], ["JSON policy synthesis", "JIT access provisioning"], ["Validation and human review", "Multi-cloud provider adapters"], ["Dashboard and audit-ready output", "LLM-based autonomous decisions"]], [3.1, 3.1])
     add_heading(doc, "1.5 Summary of Similar Applications", 2)
     add_table(doc, ["Existing capability", "Strength", "Gap addressed by IAMShield AI"], [["Cloud IAM consoles", "Native policy management", "Manual interpretation of observed access"], ["Access analyzers", "Find some unused or external access", "Do not provide this focused draft-and-review workflow"], ["Security posture platforms", "Broad cloud visibility", "Often too broad for a small academic prototype"]], [2.0, 2.2, 2.4])
+    doc.add_page_break()
+    add_heading(doc, "1.6 Proposed Solution and Expected Contribution", 2)
+    add_body(doc, "The proposed solution is a small decision-support system rather than an unrestricted autonomous controller. It receives evidence, applies transparent rules, and presents a policy draft with findings. This boundary is important because a permission change can affect application availability and data security. The administrator must be able to understand and reject a recommendation.")
+    add_table(doc, ["Stage", "System action", "Human responsibility"], [["Evidence", "Read normalized access events", "Confirm that the dataset is authorized"], ["Analysis", "Group recent allowed actions and resources", "Check whether the time window represents normal work"], ["Synthesis", "Create explicit policy statements", "Review whether the permissions match business intent"], ["Validation", "Flag wildcard or invalid statements", "Decide whether to revise or reject the draft"], ["Approval", "Store the draft status", "Approve only after review"]], [1.3, 3.0, 2.3])
+    add_heading(doc, "1.7 Expected Benefits", 2)
+    for item in [
+        "Improves visibility into which actions and resources are actually being used.",
+        "Reduces the effort required to prepare an initial least-privilege policy draft.",
+        "Makes risky wildcard access visible before an administrator considers approval.",
+        "Provides an explainable basis for discussion between security and development teams.",
+        "Creates a small foundation that can later accept provider-specific log adapters.",
+    ]:
+        add_bullet(doc, item)
 
     # Chapter 2
     add_heading(doc, "CHAPTER 2: SOFTWARE REQUIREMENT ANALYSIS")
@@ -285,6 +285,16 @@ def build_document():
     add_table(doc, ["Quality", "Target"], [["Performance", "Normal sample synthesis completes within 5 seconds."], ["Security", "No production credentials are required; administrator review is mandatory."], ["Explainability", "Each generated permission is traceable to observed action and resource data."], ["Usability", "A user can inspect patterns and generate a policy from the dashboard."], ["Maintainability", "Analysis, synthesis, validation, and UI are separate modules."]], [1.8, 4.8])
     add_heading(doc, "2.4 Feasibility Study", 2)
     add_table(doc, ["Area", "Assessment"], [["Technical", "Feasible using FastAPI, React, SQLAlchemy, and a rule-based engine."], ["Operational", "Suitable for a demonstration using synthetic or authorized sample logs."], ["Economic", "Uses open-source tools and local SQLite for the prototype."], ["Schedule", "Focused features are achievable within the academic project timeline."], ["Legal and ethical", "No unauthorized production data or automatic access changes are used."]], [1.5, 5.1])
+    add_heading(doc, "2.5 Use Case Descriptions", 2)
+    add_table(doc, ["Use case", "Actor", "Main flow", "Result"], [["Review access patterns", "Administrator", "Open dashboard and inspect action-resource frequency", "Current access evidence is visible"], ["Generate policy", "Administrator", "Choose timeframe and run synthesis", "JSON policy draft is displayed"], ["Validate policy", "Administrator", "Run validation on generated or supplied policy", "Warnings and recommendations are shown"], ["Store draft", "Administrator", "Save policy with name and type", "Draft becomes available in policy list"]], [1.5, 1.1, 2.8, 1.2])
+    add_heading(doc, "2.6 User Stories", 2)
+    for item in [
+        "As a cloud administrator, I want to see recent access patterns so that I can identify permissions that are actually used.",
+        "As a developer, I want a clear policy draft so that I can understand the minimum access required by an application.",
+        "As a reviewer, I want wildcard warnings so that I can investigate excessive permissions before approval.",
+        "As a project evaluator, I want repeatable sample data so that I can verify the synthesis behavior during a demonstration.",
+    ]:
+        add_bullet(doc, item)
 
     # Chapter 3
     add_heading(doc, "CHAPTER 3: SOFTWARE DESIGN")
@@ -292,13 +302,21 @@ def build_document():
     add_body(doc, "The system follows a simple three-layer architecture. The React client presents telemetry and policy findings. The FastAPI backend exposes endpoints and coordinates analysis. The database stores access patterns and generated policy drafts. The synthesis engine is deliberately rule-based so that its decisions can be explained and tested.")
     add_table(doc, ["Layer", "Responsibility", "Technology"], [["Presentation", "Dashboard, synthesis view, policy review", "React, Vite, CSS"], ["Application", "API routes, filtering, synthesis, validation", "Python, FastAPI"], ["Persistence", "Users, access patterns, policies, audit data", "SQLAlchemy, SQLite demo database" ]], [1.5, 3.2, 1.9])
     add_heading(doc, "3.2 Data Flow", 2)
-    add_center(doc, "Access Events -> Pattern Analysis -> Policy Synthesis -> Validation -> Human Review", 12, True, TEAL, 15)
+    add_center(doc, "Access Events -> Pattern Analysis -> Policy Synthesis -> Validation -> Human Review", 12, True, DARK, 15)
     add_body(doc, "The ingestion step receives normalized events. The analysis step removes denied or stale events and groups the remaining records. The synthesis step creates explicit statements. The validation step checks the policy structure and highlights wildcards. The final state is a reviewable draft rather than an automatic production change.")
     add_heading(doc, "3.3 Database Design", 2)
     add_table(doc, ["Entity", "Important fields", "Purpose"], [["AccessPattern", "resource, action, access_count, timestamps, status", "Stores observed access evidence"], ["Policy", "name, policy_document, status, timestamps", "Stores generated policy drafts"], ["AuditLog", "action, resource, details, timestamp", "Supports traceability"], ["User and Role", "identity and role fields", "Reserved for controlled access in the next iteration"]], [1.5, 3.1, 2.0])
     add_heading(doc, "3.4 Policy Synthesis Logic", 2)
     add_body(doc, "The current algorithm is intentionally deterministic. It selects recent allowed records, groups actions by resource, creates one Allow statement per resource, and produces recommendations when wildcard permissions are observed. This approach does not claim to understand every business intent; it gives the administrator a clear evidence-based starting point.")
     add_table(doc, ["Input", "Processing", "Output"], [["AccessPattern records", "Filter by time and status", "Recent allowed records"], ["Recent records", "Group action-resource pairs", "Minimal statement groups"], ["Statement groups", "Run structural and wildcard checks", "Policy plus findings"]], [1.8, 2.8, 2.0])
+    doc.add_page_break()
+    add_heading(doc, "3.5 Data Flow and State Transitions", 2)
+    add_table(doc, ["State", "Meaning", "Next state"], [["Observed", "Access evidence has been stored", "Analyzed"], ["Analyzed", "Records have been grouped and filtered", "Draft"], ["Draft", "Policy document has been generated", "Validated"], ["Validated", "Warnings and errors have been calculated", "Under review"], ["Under review", "Administrator is considering the recommendation", "Approved or rejected"]], [1.4, 3.2, 1.8])
+    add_body(doc, "The state model prevents the prototype from presenting a recommendation as an active permission change. The generated document remains a draft until a reviewer decides what to do with it. This separation also makes later approval, versioning, and audit features easier to add without changing the synthesis logic.")
+    add_heading(doc, "3.6 Security Design", 2)
+    add_table(doc, ["Risk", "Prototype control", "Future hardening"], [["Unauthorized policy change", "No automatic enforcement; review boundary", "Authentication and role checks on approval"], ["Sensitive log exposure", "Use synthetic or authorized sample logs", "Redaction, encryption, retention controls"], ["Over-permissioned output", "Wildcard validation and recommendations", "Provider-specific policy analyzers"], ["Incorrect inference", "Trace each statement to observed evidence", "Human feedback and labeled evaluation data"]], [1.8, 2.7, 1.9])
+    add_heading(doc, "3.7 Design Trade-offs", 2)
+    add_body(doc, "A rule-based engine was selected over a machine-learning model for the first version. Rules are easier to explain, reproduce, and test with a small dataset. The trade-off is that the system does not infer hidden business intent and may require human review when activity is incomplete. This is acceptable for a university prototype because transparency and controllable behavior are more important than broad automation at this stage.")
 
     # Chapter 4
     add_heading(doc, "CHAPTER 4: IMPLEMENTATION AND USER INTERFACE")
@@ -317,6 +335,20 @@ def build_document():
     add_table(doc, ["Method", "Endpoint", "Purpose"], [["GET", "/api/dashboard/summary", "Dashboard metrics"], ["GET", "/api/access-patterns", "List observed patterns"], ["POST", "/api/access-patterns", "Add a normalized access event"], ["POST", "/api/synthesis/analyze", "Generate policy draft"], ["POST", "/api/synthesis/validate", "Validate policy document"], ["GET/POST", "/api/policies", "List or save policy drafts"]], [1.0, 2.5, 3.1])
     add_heading(doc, "4.4 User Interface", 2)
     add_body(doc, "The dashboard is designed for a short demonstration. The overview shows the current evidence and risk signals. The synthesis screen presents the generated JSON beside validation status and observed permissions. The policies screen provides a simple review list. This keeps the interface focused on the main user journey rather than introducing multiple role portals before the core workflow is stable.")
+    doc.add_page_break()
+    add_heading(doc, "4.5 Screen and Interaction Description", 2)
+    add_table(doc, ["Screen", "Visible information", "Primary action"], [["Overview dashboard", "Event count, permission count, risk signals, recent patterns", "Open synthesis"], ["Access patterns", "Resource, action, frequency, status, review signal", "Inspect evidence"], ["Synthesis", "Policy JSON, confidence indicator, recommendations", "Run analysis"], ["Validation", "Validity state, warnings, errors, recommendations", "Review findings"], ["Policies", "Saved draft name, type, resource, status", "Open a stored draft"]], [1.5, 3.4, 1.5])
+    add_heading(doc, "4.6 Example Demonstration Scenario", 2)
+    add_body(doc, "A sample application repeatedly accesses objects in one storage bucket and lists that bucket. The access dataset also contains an unused delete action and a wildcard record. IAMShield AI groups the observed read and list activity into explicit statements, excludes denied or stale activity, and raises a warning for the wildcard permission. The reviewer can then discuss whether the delete action should remain absent and whether the wildcard record represents a legitimate exception.")
+    add_table(doc, ["Observed event", "Expected treatment", "Reason"], [["s3:GetObject on example-bucket/*", "Include", "Repeated allowed activity"], ["s3:ListBucket on example-bucket", "Include", "Repeated allowed activity"], ["s3:DeleteObject on example-bucket/*", "Exclude if unused", "No supporting recent evidence"], ["Action or resource wildcard", "Warn", "Requires administrator investigation"]], [2.4, 1.5, 2.5])
+    add_heading(doc, "4.7 Limitations of the Current UI", 2)
+    for item in [
+        "The current prototype uses a normalized dataset rather than a live cloud connector.",
+        "Authentication and detailed role-specific approval screens are reserved for the next iteration.",
+        "The interface presents JSON output and findings but does not deploy policies to a cloud account.",
+        "The confidence indicator is a prototype heuristic and should not be treated as a formal security score.",
+    ]:
+        add_bullet(doc, item)
 
     # Chapter 5
     add_heading(doc, "CHAPTER 5: SOFTWARE TESTING")
@@ -336,6 +368,21 @@ def build_document():
     add_table(doc, ["ID", "Scenario", "Expected result", "Status"], tests, [0.8, 1.6, 3.2, 1.0])
     add_heading(doc, "5.3 Evaluation Metrics", 2)
     add_table(doc, ["Metric", "Target"], [["Policy validity", "All generated normal-case policies pass structural validation."], ["Risk detection", "Wildcard actions and resources are reported."], ["Traceability", "Each permission can be traced to an observed record."], ["Latency", "Typical sample generation completes within 5 seconds."], ["Usability", "A reviewer can reach the generated policy in a small number of steps."]], [1.8, 4.8])
+    doc.add_page_break()
+    add_heading(doc, "5.4 Test Dataset Design", 2)
+    add_body(doc, "The evaluation dataset is designed to cover the decisions made by the prototype. It includes normal allowed access, repeated access, denied records, stale records, unused actions, and wildcard permissions. Each record contains enough information to explain why it was included or excluded from the generated policy.")
+    add_table(doc, ["Dataset", "Records included", "Purpose"], [["Normal access", "Specific action and resource pairs", "Verify ordinary synthesis"], ["Risky access", "Wildcard action or resource", "Verify warning generation"], ["Stale access", "Last accessed outside timeframe", "Verify time filtering"], ["Denied access", "Status set to denied", "Verify exclusion from Allow statements"], ["Empty access", "No eligible records", "Verify safe empty result"]], [1.4, 3.0, 2.0])
+    add_heading(doc, "5.5 Validation Results for the Prototype", 2)
+    add_table(doc, ["Check", "Observed result", "Interpretation"], [["Backend compilation", "Pass", "Python modules are syntactically valid"], ["Frontend production build", "Pass", "React routes and components compile"], ["Seeded synthesis smoke test", "4 patterns, 4 statements", "Normal and risky records are processed"], ["Wildcard validation", "1 warning detected", "Risk signal is visible to reviewer"], ["DOCX generation", "Pass", "Synopsis can be reproduced from script"]], [1.8, 1.8, 2.8])
+    add_heading(doc, "5.6 Acceptance Checklist", 2)
+    for item in [
+        "A reviewer can view seeded access patterns from the dashboard.",
+        "A reviewer can run synthesis without supplying cloud credentials.",
+        "The generated document contains only eligible observed permissions.",
+        "Wildcard actions or resources produce a visible warning.",
+        "The project clearly distinguishes prototype output from production enforcement.",
+    ]:
+        add_bullet(doc, item)
 
     # Chapter 6
     add_heading(doc, "CHAPTER 6: CONCLUSION AND FUTURE WORK")
@@ -351,6 +398,10 @@ def build_document():
         "Introduce controlled deployment integrations only after human approval and testing.",
     ]:
         add_bullet(doc, item)
+    add_heading(doc, "6.3 Project Limitations", 2)
+    add_body(doc, "The current project is evaluated using representative data and does not claim to replace a cloud provider's IAM service. Access patterns can be incomplete, and a permission that was not observed may still be required for a legitimate but infrequent task. For this reason, the system generates recommendations and findings rather than automatically changing production access. These limitations are part of the design boundary and should be explained during evaluation.")
+    add_heading(doc, "6.4 Expected Academic Outcome", 2)
+    add_body(doc, "The expected outcome is a working demonstration of a narrow security-automation workflow, supported by documented requirements, a modular architecture, a reproducible rule-based algorithm, a functional dashboard, and test evidence. The project provides a grounded base for later research into anomaly detection, provider adapters, and controlled policy deployment.")
 
     # References and appendices
     add_heading(doc, "REFERENCES")
@@ -376,7 +427,7 @@ def build_document():
     code_run = code.add_run('{\n  "Version": "2012-10-17",\n  "Statement": [{\n    "Effect": "Allow",\n    "Action": ["s3:GetObject"],\n    "Resource": "arn:aws:s3:::example-bucket/*"\n  }]\n}')
     code_run.font.name = "Consolas"
     code_run.font.size = Pt(10)
-    code_run.font.color.rgb = RGBColor.from_string(BLUE)
+    code_run.font.color.rgb = RGBColor.from_string(DARK)
 
     doc.save(OUTPUT)
     print(f"Saved {OUTPUT}")

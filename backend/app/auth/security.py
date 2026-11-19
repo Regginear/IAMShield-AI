@@ -3,17 +3,22 @@ from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthCredentials
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 from app.schemas import TokenData
 from app.models import User
 from app.core.database import SessionLocal
+import secrets
+from threading import Lock
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# PBKDF2 is available through passlib without requiring a platform-specific
+# bcrypt backend, which keeps the academic prototype portable on Windows.
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 # Security
 security = HTTPBearer()
+_revoked_tokens: set[str] = set()
+_token_lock = Lock()
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -38,7 +43,26 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     return encoded_jwt
 
 
+def create_refresh_token(data: dict) -> str:
+    payload = data.copy()
+    payload["token_type"] = "refresh"
+    payload["jti"] = secrets.token_urlsafe(16)
+    return create_access_token(payload, timedelta(days=7))
+
+
+def revoke_token(token: str) -> None:
+    with _token_lock:
+        _revoked_tokens.add(token)
+
+
+def is_token_revoked(token: str) -> bool:
+    with _token_lock:
+        return token in _revoked_tokens
+
+
 def verify_token(token: str) -> TokenData:
+    if is_token_revoked(token):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has been revoked")
     """Verify and decode JWT token."""
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -48,7 +72,7 @@ def verify_token(token: str) -> TokenData:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate credentials"
             )
-        token_data = TokenData(username=username)
+        token_data = TokenData(username=username, user_id=payload.get("user_id"))
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -57,7 +81,7 @@ def verify_token(token: str) -> TokenData:
     return token_data
 
 
-async def get_current_user(credentials: HTTPAuthCredentials = Depends(security)) -> User:
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> User:
     """Get current authenticated user."""
     token = credentials.credentials
     token_data = verify_token(token)

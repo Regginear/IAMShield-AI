@@ -1,19 +1,29 @@
-# IAMShield AI: Autonomous Least-Privilege IAM Policy Synthesizer
+# IAMShield AI: Assisted Least-Privilege IAM Policy Synthesizer
+
+## Current academic MVP
+
+The runnable implementation is an explainable, rule-based prototype. It accepts
+normalized access events, filters recent allowed activity, synthesizes an
+AWS-style JSON policy, flags wildcard permissions, saves drafts, and records
+authenticated reviewer decisions. It uses SQLite by default so the demo needs
+no external database service.
+
+The current MVP does not deploy policies to a cloud provider. CloudTrail
+adapters, machine-learning generation, multi-cloud support, and automatic
+enforcement are future work.
 
 ## Project Overview
 
-**IAMShield AI** is an intelligent system designed to autonomously analyze user access patterns and automatically synthesize least-privilege Identity and Access Management (IAM) policies. The system combines rule-based logic with AI-driven insights to generate secure, minimal-permission policies that reduce security risks and improve compliance.
+**IAMShield AI** is an explainable prototype that analyzes normalized access patterns and prepares least-privilege Identity and Access Management (IAM) policy drafts for human review.
 
 ## Key Features
 
-- **Autonomous Policy Synthesis**: Automatically generate least-privilege IAM policies based on user activity patterns
-- **Access Pattern Analysis**: Analyze logs and access behaviors to identify required permissions
-- **Policy Recommendation Engine**: Suggest optimal policies with explanations
-- **Policy Validation**: Validate policies against security best practices and compliance requirements
-- **Role-Based Access Control (RBAC)**: Manage users, roles, and permissions
-- **Audit Logging**: Track all policy changes and access events
-- **Multi-Cloud Support**: Generic policy format (AWS, Azure, GCP compatible)
-- **Interactive Dashboard**: User-friendly web interface for policy management
+- **Access Pattern Analysis**: Review normalized allowed and denied activity
+- **Explainable Policy Synthesis**: Generate AWS-style JSON statements from observed use
+- **Policy Validation**: Identify malformed statements and wildcard permissions
+- **Authenticated Review**: Protect policy saving and approve/reject decisions with JWT
+- **Audit History**: Record sign-ins, policy creation, and review decisions
+- **Interactive Dashboard**: Monitor telemetry, findings, drafts, and review activity
 
 ## Domain
 **Cybersecurity | Identity Defense & Cloud Security**
@@ -36,8 +46,8 @@
 - **Uvicorn** - ASGI server
 
 ### Database
-- **MySQL 8.0+** - Primary database
-- **PostgreSQL 13+** - Alternative/Analytics database
+- **SQLite** - Default local database for the academic MVP
+- **SQLAlchemy** - Database abstraction for future SQL deployments
 
 ### DevOps & Tools
 - **Docker** - Containerization
@@ -113,8 +123,6 @@ IAMShield-AI/
 ### Prerequisites
 - Node.js 18+
 - Python 3.10+
-- MySQL 8.0+ or PostgreSQL 13+
-- Docker & Docker Compose (optional)
 
 ### Setup Instructions
 
@@ -140,10 +148,10 @@ IAMShield-AI/
    python -m uvicorn app.main:app --reload
    ```
 
-4. **Setup Database**
-   - Create MySQL/PostgreSQL database
-   - Run migration scripts in `database/schemas/`
-   - Update `.env` with database credentials
+4. **Use the local database**
+   - SQLite is created automatically at `backend/iamshield.db`.
+   - Set `DATABASE_URL` only when connecting to another SQLAlchemy-supported
+     database.
 
 5. **Docker Setup (Alternative)**
    ```bash
@@ -153,10 +161,9 @@ IAMShield-AI/
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - User login
-- `POST /api/auth/refresh` - Refresh JWT token
-- `POST /api/auth/logout` - User logout
+- `POST /api/auth/register` - Register and receive a JWT
+- `POST /api/auth/login` - Sign in and receive a JWT
+- `GET /api/auth/me` - Read the current user
 
 ### Users & Roles
 - `GET /api/users` - List all users
@@ -168,8 +175,8 @@ IAMShield-AI/
 - `GET /api/policies` - List all policies
 - `POST /api/policies` - Create new policy
 - `GET /api/policies/{id}` - Get policy details
-- `PUT /api/policies/{id}` - Update policy
-- `DELETE /api/policies/{id}` - Delete policy
+- `PATCH /api/policies/{id}/status` - Approve or reject a policy
+- `GET /api/policies/{id}/history` - Read policy review history
 
 ### Policy Synthesis
 - `POST /api/synthesis/analyze` - Analyze access patterns
@@ -177,8 +184,7 @@ IAMShield-AI/
 - `POST /api/synthesis/validate` - Validate policy
 
 ### Audit & Logs
-- `GET /api/logs` - Get audit logs
-- `GET /api/logs/user/{user_id}` - Get user-specific logs
+- `GET /api/audit-logs` - Get authenticated reviewer activity
 
 ## Core Algorithms
 
@@ -200,12 +206,12 @@ The system uses a rule-based algorithm to identify the minimum required permissi
 
 - ✅ JWT-based authentication
 - ✅ Role-Based Access Control (RBAC)
-- ✅ Password hashing (bcrypt)
+- ✅ Password hashing (PBKDF2-SHA256)
 - ✅ CORS protection
 - ✅ Input validation & sanitization
 - ✅ Audit logging
 - ✅ SQL injection prevention (SQLAlchemy ORM)
-- ✅ Rate limiting
+- ⏳ Rate limiting is future work
 
 ## Contributing
 
@@ -240,5 +246,5 @@ For questions or feedback, please reach out via:
 
 ---
 
-**Last Updated**: 2026-09-02
+**Last Updated**: 2026-11-19
 **Status**: 🚀 In Development

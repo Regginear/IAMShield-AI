@@ -75,6 +75,34 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+
+class PasswordResetRequest(BaseModel):
+    username: str
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str = Field(..., min_length=8)
+
+
+class LogoutRequest(BaseModel):
+    refresh_token: Optional[str] = None
+
+
+class UserMe(UserBase):
+    id: int
+    is_active: bool
+    is_admin: bool
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 # Policy Schemas
 class PolicyBase(BaseModel):
     name: str = Field(..., min_length=3, max_length=255)
@@ -95,7 +123,7 @@ class PolicyUpdate(BaseModel):
 
 
 class PolicyStatusUpdate(BaseModel):
-    status: Literal["draft", "approved", "rejected"]
+    status: Literal["draft", "approved", "rejected", "expired"]
     reason: Optional[str] = Field(default=None, max_length=500)
 
 
@@ -192,3 +220,11 @@ class PolicyValidationResponse(BaseModel):
     warnings: List[str]
     errors: List[str]
     recommendations: List[str]
+
+
+class PolicyLifecycleUpdate(BaseModel):
+    expires_at: Optional[datetime] = None
+
+
+class PolicyRollbackRequest(BaseModel):
+    version_number: int = Field(..., ge=1)

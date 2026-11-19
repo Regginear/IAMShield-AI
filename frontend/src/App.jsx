@@ -9,6 +9,7 @@ import PolicyDetail from './pages/PolicyDetail'
 import PolicySynthesis from './pages/PolicySynthesis'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import AuditLog from './pages/AuditLog'
 
 const routeTitles = {
   '/': 'Security overview',
@@ -16,6 +17,7 @@ const routeTitles = {
   '/policies': 'Policy inventory',
   '/login': 'Sign in',
   '/register': 'Create account',
+  '/audit': 'Review activity',
 }
 
 function ApplicationShell() {
@@ -55,6 +57,7 @@ function ApplicationShell() {
           <Route path="/policies" element={<Policies />} />
           <Route path="/policies/:id" element={<PolicyDetail />} />
           <Route path="/synthesis" element={<PolicySynthesis />} />
+          <Route path="/audit" element={<AuditLog />} />
           <Route path="*" element={<main className="page-shell"><section className="panel not-found"><Icon name="shield" size={24} /><h1>Page not found</h1><p>This workspace route does not exist.</p><Link className="primary-button" to="/">Return to overview</Link></section></main>} />
         </Routes>
       </div>

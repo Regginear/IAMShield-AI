@@ -1,5 +1,8 @@
 export async function apiRequest(path, options) {
-  const response = await fetch(path, options)
+  const token = localStorage.getItem('iamshield_token')
+  const headers = new Headers(options?.headers || {})
+  if (token) headers.set('Authorization', `Bearer ${token}`)
+  const response = await fetch(path, { ...options, headers })
   const contentType = response.headers.get('content-type') || ''
   const data = contentType.includes('application/json')
     ? await response.json()
@@ -18,4 +21,16 @@ export async function apiRequest(path, options) {
   }
 
   return data
+}
+
+export function saveToken(token) {
+  localStorage.setItem('iamshield_token', token)
+}
+
+export function clearToken() {
+  localStorage.removeItem('iamshield_token')
+}
+
+export function isAuthenticated() {
+  return Boolean(localStorage.getItem('iamshield_token'))
 }

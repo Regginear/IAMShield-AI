@@ -4,8 +4,6 @@
 
 - **Node.js** 18+ (for frontend)
 - **Python** 3.10+ (for backend)
-- **MySQL** 8.0+ or **PostgreSQL** 13+
-- **Docker & Docker Compose** (optional, for containerized setup)
 - **Git** (for version control)
 
 ## Method 1: Local Development Setup
@@ -19,19 +17,8 @@ cd IAMShield-AI
 
 ### 2. Database Setup
 
-**Using MySQL:**
-```bash
-mysql -u root -p
-CREATE DATABASE iamshield;
-USE iamshield;
-SOURCE database/schemas/users_and_policies.sql;
-```
-
-**Using PostgreSQL:**
-```bash
-createdb iamshield
-psql iamshield < database/schemas/users_and_policies.sql
-```
+SQLite is the default database. The backend creates `backend/iamshield.db`
+and its tables automatically on startup; no database server is required.
 
 ### 3. Backend Setup
 
@@ -50,9 +37,8 @@ source venv/bin/activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Create .env file
-cp .env.example .env
-# Edit .env with your database credentials
+# Optional: create a .env file for SECRET_KEY and CORS settings
+copy .env.example .env
 
 # Run migrations (if any)
 # (Will be implemented)
@@ -79,40 +65,6 @@ npm run dev
 
 The frontend will be running at `http://localhost:5173`
 
-## Method 2: Docker Setup (Recommended)
-
-### Prerequisites
-- Docker (v20.10+)
-- Docker Compose (v1.29+)
-
-### Steps
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Regginear/IAMShield-AI.git
-   cd IAMShield-AI
-   ```
-
-2. **Build and run containers**
-   ```bash
-   docker-compose up -d
-   ```
-
-3. **Initialize database** (first run only)
-   ```bash
-   docker-compose exec mysql mysql -u root -proot123 < database/schemas/users_and_policies.sql
-   ```
-
-4. **Access the application**
-   - Frontend: `http://localhost:5173`
-   - Backend API: `http://localhost:8000`
-   - API Documentation: `http://localhost:8000/api/docs`
-
-5. **Stop containers**
-   ```bash
-   docker-compose down
-   ```
-
 ## Environment Configuration
 
 ### Backend (.env file)
@@ -120,8 +72,8 @@ The frontend will be running at `http://localhost:5173`
 Copy `.env.example` to `.env` and configure:
 
 ```env
-DATABASE_URL=mysql+pymysql://root:password@localhost/iamshield
-SECRET_KEY=your-secret-key-here
+DATABASE_URL=sqlite:///./iamshield.db
+SECRET_KEY=replace-with-a-long-random-value
 DEBUG=False
 ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
 ```
@@ -164,9 +116,8 @@ Visit `http://localhost:5173` in your browser
 ## Troubleshooting
 
 ### Database Connection Error
-- Verify MySQL/PostgreSQL is running
-- Check DATABASE_URL in .env file
-- Ensure database exists
+- Check that `DATABASE_URL` points to a writable SQLite path.
+- Delete `backend/iamshield.db` only when you intentionally want a fresh demo database.
 
 ### Port Already in Use
 ```bash
@@ -204,4 +155,4 @@ npm install
 
 ---
 
-**Last Updated**: 2026-09-02
+**Last Updated**: 2026-11-19

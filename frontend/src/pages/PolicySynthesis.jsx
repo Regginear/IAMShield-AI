@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { apiRequest } from '../lib/api'
 
 function sampleEvents() {
   return JSON.stringify([
@@ -22,9 +23,7 @@ export default function PolicySynthesis() {
     try {
       const parsed = JSON.parse(events)
       if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('Events must be a non-empty JSON array')
-      const response = await fetch('/api/access-patterns/bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ events: parsed }) })
-      if (!response.ok) throw new Error('Event import failed')
-      const data = await response.json()
+      const data = await apiRequest('/api/access-patterns/bulk', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ events: parsed }) })
       setMessage(`${data.imported} access events imported.`)
     } catch (requestError) { setError(requestError.message) }
   }
@@ -34,12 +33,9 @@ export default function PolicySynthesis() {
     setError('')
     setMessage('')
     try {
-      const response = await fetch('/api/synthesis/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ timeframe_days: 30 }) })
-      if (!response.ok) throw new Error('Synthesis request failed')
-      const data = await response.json()
+      const data = await apiRequest('/api/synthesis/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ timeframe_days: 30 }) })
       setResult(data)
-      const validationResponse = await fetch('/api/synthesis/validate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ policy_document: data.policy_document, policy_type: 'aws-iam' }) })
-      setValidation(await validationResponse.json())
+      setValidation(await apiRequest('/api/synthesis/validate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ policy_document: data.policy_document, policy_type: 'aws-iam' }) }))
     } catch (requestError) { setError(requestError.message) } finally { setLoading(false) }
   }
 
@@ -48,9 +44,7 @@ export default function PolicySynthesis() {
     setSaving(true)
     setError('')
     try {
-      const response = await fetch('/api/policies', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: result.policy_name, description: 'Generated from observed access patterns for administrator review.', policy_type: 'aws-iam', resource_type: 'cloud-resource', policy_document: result.policy_document }) })
-      if (!response.ok) throw new Error('Could not save policy draft')
-      const data = await response.json()
+      const data = await apiRequest('/api/policies', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: result.policy_name, description: 'Generated from observed access patterns for administrator review.', policy_type: 'aws-iam', resource_type: 'cloud-resource', policy_document: result.policy_document }) })
       setMessage(`Draft saved with ID ${data.id}. Review it from the Policies page.`)
     } catch (requestError) { setError(requestError.message) } finally { setSaving(false) }
   }

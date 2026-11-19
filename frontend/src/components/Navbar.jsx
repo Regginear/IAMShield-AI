@@ -1,18 +1,22 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import Icon from './Icon'
-import { apiRequest } from '../lib/api'
+import { apiRequest, clearToken, isAuthenticated } from '../lib/api'
+import { Link, useNavigate } from 'react-router-dom'
 
 const primaryLinks = [
   { to: '/', label: 'Overview', icon: 'grid', end: true },
   { to: '/synthesis', label: 'Policy synthesis', icon: 'spark' },
   { to: '/policies', label: 'Policy inventory', icon: 'file' },
+  { to: '/audit', label: 'Review activity', icon: 'file' },
 ]
 
 export default function Navbar() {
   const [apiAvailable, setApiAvailable] = useState(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const authenticated = isAuthenticated()
 
   useEffect(() => {
     apiRequest('/health')
@@ -52,6 +56,9 @@ export default function Navbar() {
         ))}
       </nav>
       <div className="nav-spacer" />
+      <div className="nav-auth">
+        {authenticated ? <button className="nav-auth-button" onClick={() => { clearToken(); navigate('/login') }}>Sign out</button> : <Link to="/login">Sign in</Link>}
+      </div>
       <div className="nav-section-label">SYSTEM</div>
       <div className="sidebar-status">
         <span className={`status-orb${apiAvailable === false ? ' offline' : ''}`} />

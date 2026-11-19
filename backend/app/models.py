@@ -117,3 +117,26 @@ class PolicyAuditLog(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     policy = relationship("Policy", back_populates="audit_logs")
+
+
+class PolicyVersion(Base):
+    """Immutable policy snapshots used for comparison and rollback."""
+    __tablename__ = "policy_versions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    policy_id = Column(Integer, ForeignKey("policies.id"), nullable=False, index=True)
+    version_number = Column(Integer, nullable=False)
+    policy_document = Column(Text, nullable=False)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class PolicyLifecycle(Base):
+    """Prototype lifecycle metadata kept separate from the core policy table."""
+    __tablename__ = "policy_lifecycle"
+
+    id = Column(Integer, primary_key=True, index=True)
+    policy_id = Column(Integer, ForeignKey("policies.id"), unique=True, nullable=False)
+    expires_at = Column(DateTime, nullable=True)
+    rollback_version = Column(Integer, nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
